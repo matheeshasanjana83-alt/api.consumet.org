@@ -1,0 +1,30 @@
+name: deploy to Vercel
+# One-time setup (repo owner):
+#   1. vercel.com/account/tokens → create a token
+#   2. This repo → Settings → Secrets and variables → Actions → New secret: VERCEL_TOKEN
+#   3. Re-run this workflow (Actions → deploy to Vercel → Run workflow)
+# First successful run creates project "api-consumet-org" → https://api-consumet-org.vercel.app
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: deploy (needs VERCEL_TOKEN secret)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret is not set — add it (Settings → Secrets → Actions), then re-run this workflow."
+            exit 0
+          fi
+          npm i -g vercel@latest
+          vercel link --yes --project api-consumet-org --token "$VERCEL_TOKEN"
+          vercel deploy --prod --yes --token "$VERCEL_TOKEN" || vercel deploy --prod --yes --token "$VERCEL_TOKEN"
